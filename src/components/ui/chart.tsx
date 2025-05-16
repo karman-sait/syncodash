@@ -1,8 +1,14 @@
 "use client"
+
 import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
+import { useEffect, useRef } from "react"
 
-/** Consistent card-friendly container for Recharts components */
+/* -------------------------------------------------------------
+   ChartShell
+   • Guarantees a visible height *at every breakpoint*.
+   • Fires a one-off “resize” after mount so Recharts syncs.
+   ------------------------------------------------------------- */
 export function ChartShell({
   className,
   children,
@@ -10,12 +16,22 @@ export function ChartShell({
   className?: string
   children: ReactNode
 }) {
+  // one-time resize nudge  ───────────────────────────
+  const sent = useRef(false)
+  useEffect(() => {
+    if (sent.current) return
+    sent.current = true
+    const id = requestAnimationFrame(() =>
+      window.dispatchEvent(new Event("resize"))
+    )
+    return () => cancelAnimationFrame(id)
+  }, [])
+
   return (
     <div
       className={cn(
-        // phones: 16/9 aspect so nothing side-scrolls
-        // ≥ sm: fixed height, allows cards to equalise nicely
-        "relative w-full min-w-0 xs:aspect-video xs:h-auto sm:h-64 lg:h-72",
+        /*  ↓↓↓  key change: a real height on mobile  ↓↓↓ */
+        "relative w-full h-56 sm:h-64 lg:h-72 overflow-hidden",
         className
       )}
     >
@@ -24,10 +40,9 @@ export function ChartShell({
   )
 }
 
-/* translucent tooltip (unchanged) … */
-
-
-/* ----------  Minimal tooltip that matches Apple-style translucency  -------- */
+/* ----------------------------------------------------------------
+   Minimal translucent tooltip (unchanged).
+   ---------------------------------------------------------------- */
 export function ChartTooltip({
   active,
   label,
